@@ -1185,7 +1185,7 @@ def play(events, speed_factor=1.0):
 replay = play
 
 _word_listeners = {}
-def add_word_listener(word, callback, triggers=['space'], match_suffix=False, timeout=2):
+def add_word_listener(word, callback, triggers=['space'], match_suffix=False, timeout=2, allow_backspace=False):
     """
     Invokes a callback every time a sequence of characters is typed (e.g. 'pet')
     and followed by a trigger key (e.g. space). Modifiers (e.g. alt, ctrl,
@@ -1203,6 +1203,8 @@ def add_word_listener(word, callback, triggers=['space'], match_suffix=False, ti
     listener for 'pet'. Defaults to false, only whole words are checked.
     - `timeout` is the maximum number of seconds between typed characters before
     the current word is discarded. Defaults to 2 seconds.
+    - `allow_backspace` defines if a backspace keystroke should reset the text to
+    be matched.
 
     Returns the event handler created. To remove a word listener use
     `remove_word_listener(word)` or `remove_word_listener(handler)`.
@@ -1211,6 +1213,7 @@ def add_word_listener(word, callback, triggers=['space'], match_suffix=False, ti
     Note: word matches are **case sensitive**.
     """
     state = _State()
+    backspace_name = 'delete' if _platform.system() == 'Darwin' else 'backspace'
     state.current = ''
     state.time = -1
 
@@ -1226,6 +1229,8 @@ def add_word_listener(word, callback, triggers=['space'], match_suffix=False, ti
         if name in triggers and matched:
             callback()
             state.current = ''
+        elif allow_backspace == True and name == backspace_name:
+            state.current = state.current[:-1]
         elif len(name) > 1:
             state.current = ''
         else:
